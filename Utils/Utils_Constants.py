@@ -21,7 +21,7 @@ import os
 # 1. ОБЩИЕ СВЕДЕНИЯ О ПАРСЕРЕ
 # ==============================================================================
 
-PARSER_VERSION = "19.5"
+PARSER_VERSION = "19.7"
 PARSER_NAME = "HuaHW-Tracker"
 
 SUPPORTED_VERSIONS_DESCRIPTION = {
@@ -56,9 +56,11 @@ USEFUL_LINKS = [
 # ==============================================================================
 
 TEMPLATE_FILE = "Form.xlsx"
+DETAILS_TEMPLATE_FILE = "Form_Details.xlsx"
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_PATH = os.path.join(BASE_DIR, TEMPLATE_FILE)
+DETAILS_TEMPLATE_PATH = os.path.join(BASE_DIR, DETAILS_TEMPLATE_FILE)
 
 
 # ==============================================================================

@@ -34,13 +34,13 @@ DEFAULTS = {
     "export_folder":     "",
     "always_ask_export": True,
     "auto_open":         False,
+    "auto_open_details": False,
     "include_synthetic": False,
     "ask_customer":      True,
     "clear_console":     True,
     "clear_table":       True,
     "verbose_logging":   False,
     "language":          DEFAULT_LANGUAGE,
-    # Строка со всеми доступными компонентами по умолчанию
     "detailed_components": "Controller,Disk,Power Supply,BBU,Fan,I/O Module,Expansion Board,SFP Module,Enclosure",
 }
 
@@ -149,6 +149,9 @@ class SettingsDialog(QDialog):
         self.cb_auto_open = QCheckBox(tr("settings_auto_open"))
         output_layout.addWidget(self.cb_auto_open)
 
+        self.cb_auto_open_details = QCheckBox(tr("settings_auto_open_details"))
+        output_layout.addWidget(self.cb_auto_open_details)
+
         self.cb_synthetic = QCheckBox(tr("settings_include_synthetic"))
         output_layout.addWidget(self.cb_synthetic)
 
@@ -219,6 +222,9 @@ class SettingsDialog(QDialog):
         self.cb_auto_open.setChecked(
             s.value("General/auto_open", DEFAULTS["auto_open"], type=bool)
         )
+        self.cb_auto_open_details.setChecked(
+            s.value("General/auto_open_details", DEFAULTS["auto_open_details"], type=bool)
+        )
         self.cb_synthetic.setChecked(
             s.value("General/include_synthetic", DEFAULTS["include_synthetic"], type=bool)
         )
@@ -256,6 +262,7 @@ class SettingsDialog(QDialog):
         s.setValue("General/always_ask_export", self.cb_always_ask_export.isChecked())
 
         s.setValue("General/auto_open", self.cb_auto_open.isChecked())
+        s.setValue("General/auto_open_details", self.cb_auto_open_details.isChecked())
         s.setValue("General/include_synthetic", self.cb_synthetic.isChecked())
         s.setValue("General/ask_customer", self.cb_ask_customer.isChecked())
         s.setValue("General/clear_console", self.cb_clear_console.isChecked())
@@ -322,6 +329,7 @@ class SettingsDialog(QDialog):
         self.export_edit.setText(DEFAULTS["export_folder"])
         self.cb_always_ask_export.setChecked(DEFAULTS["always_ask_export"])
         self.cb_auto_open.setChecked(DEFAULTS["auto_open"])
+        self.cb_auto_open_details.setChecked(DEFAULTS["auto_open_details"])
         self.cb_synthetic.setChecked(DEFAULTS["include_synthetic"])
         self.cb_ask_customer.setChecked(DEFAULTS["ask_customer"])
         self.cb_clear_console.setChecked(DEFAULTS["clear_console"])
@@ -335,7 +343,7 @@ class SettingsDialog(QDialog):
         # Сбрасываем выбранные компоненты в настройках напрямую
         self.settings.setValue("General/detailed_components", DEFAULTS["detailed_components"])
         self.settings.sync()
-
+        
     # --------------------------------------------------------------------------
     # RESTART PROMPT
     # --------------------------------------------------------------------------

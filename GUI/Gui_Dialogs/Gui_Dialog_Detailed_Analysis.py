@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
     QListWidget, QListWidgetItem, QGroupBox, QTableWidget,
     QTableWidgetItem, QHeaderView, QAbstractItemView, QMessageBox, 
-    QTabWidget, QWidget  # <--- ДОБАВЛЕН QWidget
+    QTabWidget, QWidget
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QColor
@@ -155,6 +155,8 @@ class DetailedAnalysisDialog(QDialog):
                 "I/O Module", "Expansion Board", "SFP Module", "Enclosure"
             ]
 
+        self._last_bbu_data = []
+
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
 
@@ -197,7 +199,6 @@ class DetailedAnalysisDialog(QDialog):
         config_layout.addLayout(select_row)
         layout.addWidget(config_group)
 
-        # --- ВКЛАДКИ РЕЗУЛЬТАТОВ ---
         self.tabs = QTabWidget()
         self.tabs.setStyleSheet("""
             QTabWidget::pane {
@@ -219,11 +220,18 @@ class DetailedAnalysisDialog(QDialog):
         layout.addWidget(self.tabs, 1)
 
         btn_row = QHBoxLayout()
+        
         self.btn_run_analysis = QPushButton("Запустить анализ")
         self.btn_run_analysis.setStyleSheet(self._btn_style_primary())
         self.btn_run_analysis.setEnabled(False)
         self.btn_run_analysis.clicked.connect(self._on_run_clicked)
         btn_row.addWidget(self.btn_run_analysis)
+
+        self.btn_export_excel = QPushButton("📤 Экспорт в Excel")
+        self.btn_export_excel.setStyleSheet(self._btn_style_dark())
+        self.btn_export_excel.setEnabled(False)
+        self.btn_export_excel.clicked.connect(self._export_to_excel)
+        btn_row.addWidget(self.btn_export_excel)
 
         btn_row.addStretch(1)
 
@@ -267,32 +275,25 @@ class DetailedAnalysisDialog(QDialog):
             QMessageBox.warning(self, "Ошибка", "Нет файлов для анализа.")
             return
 
-        # Очищаем вкладки от прошлых результатов
         self.tabs.clear()
-
         analyzed_anything = False
         unsupported_components = []
 
-        # 1. Проверяем BBU
         if "BBU" in self.selected_components:
             self._analyze_bbu()
             analyzed_anything = True
 
-        # 2. Проверяем остальные компоненты
         supported_now = {"BBU"}
         for comp in self.selected_components:
             if comp not in supported_now:
                 unsupported_components.append(comp)
 
-        # 3. Выводим предупреждения
         if not analyzed_anything:
-            # Если вообще ничего не реализовано из выбранного
             QMessageBox.information(
                 self, "Анализ", 
                 f"Логика анализа для выбранных компонентов пока не написана:\n{', '.join(unsupported_components)}"
             )
         elif unsupported_components:
-            # Если что-то реализовано, но есть лишние галочки
             QMessageBox.information(
                 self, "Внимание", 
                 f"Анализ выполнен только для поддерживаемых компонентов (BBU).\n"
@@ -326,6 +327,10 @@ class DetailedAnalysisDialog(QDialog):
 
         if not all_bbu_data:
             return
+
+        # Сохраняем данные для экспорта и включаем кнопку
+        self._last_bbu_data = all_bbu_data
+        self.btn_export_excel.setEnabled(True)
 
         bbu_tab = QWidget()
         tab_layout = QVBoxLayout(bbu_tab)
@@ -397,6 +402,54 @@ class DetailedAnalysisDialog(QDialog):
         tab_layout.addWidget(table)
         self.tabs.addTab(bbu_tab, "🔋 BBU")
         self.tabs.setCurrentIndex(0)
+
+    def _export_to_excel(self):
+        if not self._last_bbu_data:
+            QMessageBox.warning(self, "Экспорт", "Нет данных для экспорта. Сначала запустите анализ.")
+            return
+
+        from Core.Core_Export_Excel_Details import DetailsExcelExporter
+
+        if os.path.isdir(self.current_path):
+            output_dir = self.current_path
+        else:
+            output_dir = os.path.dirname(self.current_path)
+
+        if self._last_bbu_data and self._last_bbu_data[0].get("sys_name") != "N/A":
+            name_hint = self._last_bbu_data[0]["sys_name"]
+            if len(self.file_paths) > 1:
+                name_hint = "нескольких_СХД"
+        else:
+            name_hint = os.path.splitext(os.path.basename(self.current_path))[0]
+            if not name_hint:
+                name_hint = "СХД"
+
+        name_hint = "".join([c for c in name_hint if c.isalnum() or c in " -_"]).strip()
+
+        try:
+            exporter = DetailsExcelExporter()
+            result_path = exporter.export_bbu(
+                bbu_data=self._last_bbu_data,
+                output_dir=output_dir,
+                name_hint=name_hint
+            )
+            
+            # --- ДОБАВЛЯЕМ АВТООТКРЫТИЕ ---
+            if self.parent() and hasattr(self.parent(), "settings"):
+                auto_open = self.parent().settings.value("General/auto_open_details", False, type=bool)
+                if auto_open:
+                    from Utils.Utils_System import open_in_system
+                    open_in_system(result_path)
+
+            QMessageBox.information(
+                self, "Экспорт завершён",
+                f"Файл успешно сохранён:\n{result_path}"
+            )
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Ошибка экспорта", 
+                f"Не удалось сохранить файл:\n{e}"
+            )
 
     def _btn_style_dark(self):
         return """

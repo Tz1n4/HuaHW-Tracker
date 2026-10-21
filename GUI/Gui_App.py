@@ -802,6 +802,9 @@ class HuaHWTrackerGUI(QMainWindow):
     def show_settings(self):
         dlg = SettingsDialog(self.settings, parent=self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
+            # После закрытия настроек перечитываем компоненты, 
+            # так как их могли сбросить кнопкой "Сбросить настройки"
+            self.detailed_components = self._read_components_from_ini()
             self.status_bar.showMessage(tr("settings_saved"), 3000)
 
     def show_detailed_analysis(self):
