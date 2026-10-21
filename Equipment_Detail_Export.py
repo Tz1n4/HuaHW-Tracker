@@ -107,6 +107,24 @@ def _elabel_field(block, name):
     return m.group(1).strip() if m else ""
 
 
+# Совместимость с Utils_Regex_Helpers.extract_label_fields: форматы логов
+# Huawei содержат варианты как "BarCode=XXX", так и "BarCode= XXX"
+# (пробел после "="). Паттерны без \s* такие поля пропускают, поэтому в
+# модуле используются собственные regex с учётом обоих вариантов.
+_ITEM_RE      = re.compile(r'Item=(\S+)')
+_BARCODE_RE   = re.compile(r'BarCode=(\S+)')
+_DESCRIBE_RE  = re.compile(r'Description=(.+?)(?:\n|$)')
+
+
+def _lbl_value(lbl_dict, key, lbl_block, tag):
+    """Значение поля Elabel: сначала стандартный extract_label_fields,
+    затем fallback-regex, допускающий пробел после '='."""
+    val = lbl_dict.get(key, "N/A")
+    if val and val != "N/A":
+        return val
+    return _elabel_field(lbl_block, tag)
+
+
 def parse_bbu_details(content):
     """
     Универсально парсит все блоки BBU из содержимого лога (V3/V5/V6).
@@ -133,16 +151,24 @@ def parse_bbu_details(content):
                 em = re.match(r'(CTE\d+)', bbu_id)
                 enclosure_id = em.group(1) if em else ""
 
-            # Electronic Label: BarCode / Description / Manufactured= / Item(PN)
-            elabel_m = re.search(r'Electronic Label:\s*(.*?)(?=BBU ID:|\Z)',
-                                 block, re.DOTALL)
-            lbl_block = elabel_m.group(1) if elabel_m else block
+            # Электронная этикетка: BarCode / Description / Manufactured= / Item(PN)
+            # Разделители конца блока различаются между версиями журналов:
+            #   V3 Dorado  : следующий "BBU ID:"
+            #   V5 flat    : следующий "(BBU )?ID:"
+            #   V6         : следующий "BBU(...)" или заголовок секции "---"
+            elabel_m = re.search(
+                r'Electronic Label:\s*(.*?)'
+                r'(?=\n\s*(?:BBU )?ID:|\n\s*BBU\(|\n[^\nD][^\n]*?-{5,}|\Z)',
+                block, re.DOTALL,
+            )
+            lbl_block = (elabel_m.group(1) if elabel_m else block).strip()
             lbl = extract_label_fields(lbl_block)
 
-            barcode = lbl["barcode"] if lbl["barcode"] != "N/A" else _elabel_field(lbl_block, "BarCode")
-            description = lbl["description"] if lbl["description"] != "N/A" else _elabel_field(lbl_block, "Description")
+            barcode = _lbl_value(lbl, "barcode", lbl_block, "BarCode")
+            description = _lbl_value(lbl, "description", lbl_block, "Description")
             manufactured = _elabel_field(lbl_block, "Manufactured")
-            part_number = lbl["item"] if lbl["item"] != "N/A" else ""
+            # Part Number: Item= из Elabel; если отсутствует — пусто (требование ТЗ)
+            part_number = _lbl_value(lbl, "item", lbl_block, "Item")
 
             # Пропускаем полностью пустые блоки (не BBU-детали)
             if not any([barcode, description, _field(block, "Health Status"),
@@ -163,7 +189,8 @@ def parse_bbu_details(content):
                 "health_status":    _field(block, "Health Status"),
                 "running_status":   _field(block, "Running Status"),
                 "voltage":          _field(block, "Voltage(V)"),
-                "firmware_version": _field(block, "Firmware Version"),
+                "firmware_version": (_field(block, "Firmware Version")
+                                     or _elabel_field(block, "Software Version")),
                 "barcode":          barcode,
                 "description":      description,
                 "part_number":      part_number,
