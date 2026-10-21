@@ -1,0 +1,136 @@
+PROFILE FOR STORAGE ARRAY: Dorado6000V3 (2023-5-10 09:30:00)
+
+SUMMARY----------------------------------------
+System Name: Dorado6000V3
+Product Model: Dorado6000 V3
+Product Version: V300R001C20
+Product Serial Number: 2102010XDK10M5000001
+System Location: DataCenter-A
+------------------------------------------------
+
+BBU Info----------------------------------------
+BBU ID: CTE0.0
+Enclosure ID: 0
+Health Status: Normal
+Running Status: Online
+Voltage(V): 41.2
+Current(A): 0.5
+Temperature(℃): 25
+RemainLife(days): 780
+Total Capacity(mAh): 4500
+Remaining Capacity(mAh): 4400
+Cycle Count: 120
+Delivered On: 2022-08-15
+Electronic Label:
+    SN= 2102350JUD10DA00000001
+    Manufactured= 2022-07-20
+    Item= 02350JUD
+    Description= BBU-12S3000BHU
+    BarCode= 2102350JUD10DA00000001
+    ElabelVersion= 1.0
+
+BBU ID: CTE0.1
+Enclosure ID: 0
+Health Status: Normal
+Running Status: Online
+Voltage(V): 41.0
+Current(A): 0.4
+Temperature(℃): 26
+RemainLife(days): 780
+Total Capacity(mAh): 4500
+Remaining Capacity(mAh): 4380
+Cycle Count: 118
+Delivered On: 2022-08-15
+Electronic Label:
+    SN= 2102350JUD10DA00000002
+    Manufactured= 2022-07-20
+    Item= 02350JUD
+    Description= BBU-12S3000BHU
+    BarCode= 2102350JUD10DA00000002
+    ElabelVersion= 1.0
+
+BBU ID: CTE0.2
+Enclosure ID: 0
+Health Status: Normal
+Running Status: Online
+Voltage(V): 41.5
+Current(A): 0.5
+Temperature(℃): 25
+RemainLife(days): 780
+Total Capacity(mAh): 4500
+Remaining Capacity(mAh): 4410
+Cycle Count: 121
+Delivered On: 2022-08-15
+Electronic Label:
+    SN= 2102350JUD10DA00000003
+    Manufactured= 2022-07-21
+    Item= 02350JUD
+    Description= BBU-12S3000BHU
+    BarCode= 2102350JUD10DA00000003
+    ElabelVersion= 1.0
+
+BBU ID: CTE1.0
+Enclosure ID: 1
+Health Status: Normal
+Running Status: Online
+Voltage(V): 40.9
+Current(A): 0.6
+Temperature(℃): 27
+RemainLife(days): 780
+Total Capacity(mAh): 4500
+Remaining Capacity(mAh): 4350
+Cycle Count: 125
+Delivered On: 2022-09-01
+Electronic Label:
+    SN= 2102350JUD10DA00000004
+    Manufactured= 2022-08-05
+    Item= 02350JUD
+    Description= BBU-12S3000BHU
+    BarCode= 2102350JUD10DA00000004
+    ElabelVersion= 1.0
+
+BBU ID: CTE1.1
+Enclosure ID: 1
+Health Status: Fault
+Running Status: Offline
+Voltage(V): 0.0
+Current(A): 0.0
+Temperature(℃): 20
+RemainLife(days): 780
+Total Capacity(mAh): 4500
+Remaining Capacity(mAh): 0
+Cycle Count: 300
+Delivered On: 2022-09-01
+Electronic Label:
+    SN= 2102350JUD10DA00000005
+    Manufactured= 2022-08-06
+    Item= 02350JUD
+    Description= BBU-12S3000BHU
+    BarCode= 2102350JUD10DA00000005
+    ElabelVersion= 1.0
+
+BBU ID: CTE1.2
+Enclosure ID: 1
+Health Status: Normal
+Running Status: Online
+Voltage(V): 41.1
+Current(A): 0.5
+Temperature(℃): 26
+RemainLife(days): 780
+Total Capacity(mAh): 4500
+Remaining Capacity(mAh): 4420
+Cycle Count: 119
+Delivered On: 2022-09-01
+Electronic Label:
+    SN= 2102350JUD10DA00000006
+    Manufactured= 2022-08-06
+    Item= 02350JUD
+    Description= BBU-12S3000BHU
+    BarCode= 2102350JUD10DA00000006
+    ElabelVersion= 1.0
+
+Controller Info---------------------------------
+Controller ID: 0A
+Health Status: Normal
+Running Status: Online
+Firmware Version: 1.2.3

@@ -1221,6 +1221,69 @@ class HuaweiParserGUI(QMainWindow):
         )
 
     # --------------------------------------------------------------------------
+    # ДЕТАЛИЗАЦИЯ ОБОРУДОВАНИЯ (BBU)
+    # --------------------------------------------------------------------------
+
+    def export_equipment_detail(self):
+        """
+        Menu handler "Equipment Detail (BBU)".
+
+        Uses the currently selected log file (path_edit), parses BBU blocks,
+        dynamically recalculates RemainLife and exports an Excel report.
+        """
+        from Equipment_Detail_Export import export_equipment_detail as _export
+
+        log_path = self.path_edit.text().strip()
+
+        if not (log_path and os.path.isfile(log_path)):
+            last_file = self.settings.value("General/last_file", "", type=str)
+            if last_file and os.path.isfile(last_file):
+                log_path = last_file
+
+        if not (log_path and os.path.isfile(log_path)):
+            QMessageBox.warning(
+                self, tr("menu_equipment_detail"), tr("eqdetail_no_file")
+            )
+            return
+
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        default_name = (
+            f"{os.path.splitext(os.path.basename(log_path))[0]}"
+            f"_Equipment_Detail_{ts}.xlsx"
+        )
+
+        out_path = self._pick_export_path(
+            tr("menu_equipment_detail"), default_name,
+            tr("export_filter_xlsx")
+        )
+        if not out_path:
+            return
+
+        try:
+            result = _export(log_path, out_path)
+        except Exception as e:
+            QMessageBox.critical(
+                self, tr("menu_equipment_detail"),
+                trf("eqdetail_error", e=e)
+            )
+            return
+
+        n = len(result.get("records", []))
+        if n == 0:
+            QMessageBox.information(
+                self, tr("menu_equipment_detail"), tr("eqdetail_no_bbu")
+            )
+            return
+
+        QMessageBox.information(
+            self, tr("menu_equipment_detail"),
+            trf("eqdetail_done", path=result["output"], n=n)
+        )
+        self.status_bar.showMessage(
+            f"Exported: {os.path.basename(result['output'])}", 5000
+        )
+
+    # --------------------------------------------------------------------------
     # ЗАВЕРШЕНИЕ
     # --------------------------------------------------------------------------
 
@@ -1328,6 +1391,13 @@ class HuaweiParserGUI(QMainWindow):
         act_settings = QAction(tr("menu_settings"), self)
         act_settings.triggered.connect(self.show_settings)
         tools_menu.addAction(act_settings)
+
+        tools_menu.addSeparator()
+
+        act_equipment_detail = QAction(tr("menu_equipment_detail"), self)
+        act_equipment_detail.setShortcut(QKeySequence("Ctrl+D"))
+        act_equipment_detail.triggered.connect(self.export_equipment_detail)
+        tools_menu.addAction(act_equipment_detail)
 
         help_menu = menubar.addMenu(tr("menu_help"))
 
