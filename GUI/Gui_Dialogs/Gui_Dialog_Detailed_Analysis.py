@@ -7,14 +7,15 @@ Gui_Dialog_Detailed_Analysis.py — окна для детального ана�
 import os
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QListWidget, QListWidgetItem, QGroupBox, QTableWidget,
-    QTableWidgetItem, QHeaderView, QAbstractItemView, QMessageBox, 
-    QTabWidget, QWidget
+    QListWidget, QListWidgetItem, QGroupBox, QMessageBox, 
+    QTabWidget
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QColor
+from PyQt6.QtGui import QFont
 
 from Utils.Utils_Locale import tr
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_BBU_Tab import BBUDetailsTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_Controller_Tab import ControllerDetailsTab
 
 
 class ComponentSelectionDialog(QDialog):
@@ -155,7 +156,7 @@ class DetailedAnalysisDialog(QDialog):
                 "I/O Module", "Expansion Board", "SFP Module", "Enclosure"
             ]
 
-        self._last_bbu_data = []
+        self._tabs_instances = {}
 
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
@@ -276,14 +277,26 @@ class DetailedAnalysisDialog(QDialog):
             return
 
         self.tabs.clear()
+        self._tabs_instances.clear()
         analyzed_anything = False
         unsupported_components = []
 
+        # Диспетчер вкладок
         if "BBU" in self.selected_components:
-            self._analyze_bbu()
-            analyzed_anything = True
+            bbu_tab = BBUDetailsTab(self.file_paths, self)
+            if bbu_tab.get_export_data():
+                self.tabs.addTab(bbu_tab, "🔋 BBU")
+                self._tabs_instances["BBU"] = bbu_tab
+                analyzed_anything = True
 
-        supported_now = {"BBU"}
+        if "Controller" in self.selected_components:
+            ctrl_tab = ControllerDetailsTab(self.file_paths, self)
+            if ctrl_tab.get_export_data():
+                self.tabs.addTab(ctrl_tab, "🧠 Controller")
+                self._tabs_instances["Controller"] = ctrl_tab
+                analyzed_anything = True
+
+        supported_now = {"BBU", "Controller"}
         for comp in self.selected_components:
             if comp not in supported_now:
                 unsupported_components.append(comp)
@@ -293,118 +306,19 @@ class DetailedAnalysisDialog(QDialog):
                 self, "Анализ", 
                 f"Логика анализа для выбранных компонентов пока не написана:\n{', '.join(unsupported_components)}"
             )
-        elif unsupported_components:
-            QMessageBox.information(
-                self, "Внимание", 
-                f"Анализ выполнен только для поддерживаемых компонентов (BBU).\n"
-                f"Следующие компоненты проигнорированы: {', '.join(unsupported_components)}"
-            )
-
-    def _analyze_bbu(self):
-        from Parsers.Parsers_Details.Parser_BBU_Details import parse_bbu_details
-        from Core.Core_System_Info import parse_system_info
-        
-        all_bbu_data = []
-        
-        for fpath in self.file_paths:
-            try:
-                with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
-                    content = f.read()
-                
-                sys_info = parse_system_info(content[:5000])
-                sys_name = sys_info.get("name", os.path.basename(fpath))
-                sys_model = sys_info.get("model", "N/A")
-                sys_version = sys_info.get("version", "V3")
-                
-                bbu_list = parse_bbu_details(content, sys_version=sys_version)
-                
-                for bbu in bbu_list:
-                    bbu["sys_name"] = sys_name
-                    bbu["sys_model"] = sys_model
-                    all_bbu_data.append(bbu)
-            except Exception as e:
-                print(f"Ошибка при чтении {fpath}: {e}")
-
-        if not all_bbu_data:
-            return
-
-        # Сохраняем данные для экспорта и включаем кнопку
-        self._last_bbu_data = all_bbu_data
-        self.btn_export_excel.setEnabled(True)
-
-        bbu_tab = QWidget()
-        tab_layout = QVBoxLayout(bbu_tab)
-        tab_layout.setContentsMargins(0, 0, 0, 0)
-        
-        table = QTableWidget()
-        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        table.setAlternatingRowColors(True)
-        table.verticalHeader().setVisible(False)
-        table.setStyleSheet("""
-            QTableWidget {
-                background-color: #1e1e1e; color: #d4d4d4;
-                border: none;
-            }
-            QHeaderView::section {
-                background-color: #2d2d2d; color: #d4d4d4;
-                border: 1px solid #3c3c3c; padding: 4px;
-            }
-        """)
-
-        headers = [
-            "Система", "Модель СХД", "ID (Слот)", "Здоровье", "Статус", "Напряжение", 
-            "Остаток (дн. из лога)", "Остаток на сегодня (дн.)", "Конец срока", 
-            "Поставка", "Возраст", "Part Number", "Серийный номер"
-        ]
-        table.setColumnCount(len(headers))
-        table.setHorizontalHeaderLabels(headers)
-        table.setRowCount(len(all_bbu_data))
-
-        table.setSortingEnabled(False)
-
-        for row, bbu in enumerate(all_bbu_data):
-            days_left = bbu["real_remain_days"]
-            row_color = None
-            if isinstance(days_left, int):
-                if days_left < 0:
-                    row_color = QColor(255, 80, 80)
-                elif days_left < 180:
-                    row_color = QColor(255, 180, 50)
-
-            age_str = str(bbu.get("age_days", "N/A"))
-            if isinstance(bbu.get("age_days"), int):
-                age_years = bbu["age_days"] // 365
-                age_rem_days = bbu["age_days"] % 365
-                if age_years > 0:
-                    age_str = f"{age_years} г. {age_rem_days} дн."
-                else:
-                    age_str = f"{age_rem_days} дн."
-
-            values = [
-                bbu["sys_name"], bbu["sys_model"], bbu["id"], bbu["health"], 
-                bbu["running"], bbu["voltage"], bbu["remain_life_log"], str(days_left), 
-                bbu["end_of_life"], bbu["delivered_on"], age_str, bbu["item"], bbu["barcode"]
-            ]
-
-            for col, val in enumerate(values):
-                item = QTableWidgetItem(str(val))
-                
-                if col in (2, 3, 6, 7):
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                    
-                if row_color:
-                    item.setForeground(row_color)
-                table.setItem(row, col, item)
-
-        table.resizeColumnsToContents()
-        table.setSortingEnabled(True)
-        
-        tab_layout.addWidget(table)
-        self.tabs.addTab(bbu_tab, "🔋 BBU")
-        self.tabs.setCurrentIndex(0)
+            self.btn_export_excel.setEnabled(False)
+        else:
+            self.btn_export_excel.setEnabled(True)
+            self.tabs.setCurrentIndex(0)
+            if unsupported_components:
+                QMessageBox.information(
+                    self, "Внимание", 
+                    f"Анализ выполнен только для поддерживаемых компонентов.\n"
+                    f"Следующие компоненты проигнорированы: {', '.join(unsupported_components)}"
+                )
 
     def _export_to_excel(self):
-        if not self._last_bbu_data:
+        if not self._tabs_instances:
             QMessageBox.warning(self, "Экспорт", "Нет данных для экспорта. Сначала запустите анализ.")
             return
 
@@ -415,8 +329,12 @@ class DetailedAnalysisDialog(QDialog):
         else:
             output_dir = os.path.dirname(self.current_path)
 
-        if self._last_bbu_data and self._last_bbu_data[0].get("sys_name") != "N/A":
-            name_hint = self._last_bbu_data[0]["sys_name"]
+        # Берем данные из первой доступной вкладки для формирования name_hint
+        first_tab = list(self._tabs_instances.values())[0]
+        first_data = first_tab.get_export_data()
+        
+        if first_data and first_data[0].get("sys_name") != "N/A":
+            name_hint = first_data[0]["sys_name"]
             if len(self.file_paths) > 1:
                 name_hint = "нескольких_СХД"
         else:
@@ -428,13 +346,15 @@ class DetailedAnalysisDialog(QDialog):
 
         try:
             exporter = DetailsExcelExporter()
-            result_path = exporter.export_bbu(
-                bbu_data=self._last_bbu_data,
-                output_dir=output_dir,
-                name_hint=name_hint
-            )
             
-            # --- ДОБАВЛЯЕМ АВТООТКРЫТИЕ ---
+            # Собираем данные со всех активных вкладок
+            export_data = {}
+            for key, tab in self._tabs_instances.items():
+                export_data[key] = tab.get_export_data()
+
+            # Экспортируем всё в один файл
+            result_path = exporter.export_all(export_data, output_dir, name_hint)
+            
             if self.parent() and hasattr(self.parent(), "settings"):
                 auto_open = self.parent().settings.value("General/auto_open_details", False, type=bool)
                 if auto_open:

@@ -21,7 +21,7 @@ import os
 # 1. ОБЩИЕ СВЕДЕНИЯ О ПАРСЕРЕ
 # ==============================================================================
 
-PARSER_VERSION = "19.7"
+PARSER_VERSION = "1.9.2"
 PARSER_NAME = "HuaHW-Tracker"
 
 SUPPORTED_VERSIONS_DESCRIPTION = {
