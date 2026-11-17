@@ -21,7 +21,7 @@ import os
 # 1. ОБЩИЕ СВЕДЕНИЯ О ПАРСЕРЕ
 # ==============================================================================
 
-PARSER_VERSION = "1.9.2"
+PARSER_VERSION = "1.9.6"
 PARSER_NAME = "HuaHW-Tracker"
 
 SUPPORTED_VERSIONS_DESCRIPTION = {
@@ -55,12 +55,12 @@ USEFUL_LINKS = [
 # 2. ФАЙЛ-ШАБЛОН EXCEL
 # ==============================================================================
 
-TEMPLATE_FILE = "Form.xlsx"
-DETAILS_TEMPLATE_FILE = "Form_Details.xlsx"
+TEMPLATE_FILE = "Core_Form.xlsx"
+DETAILS_TEMPLATE_FILE = "Core_Form_Details.xlsx"
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TEMPLATE_PATH = os.path.join(BASE_DIR, TEMPLATE_FILE)
-DETAILS_TEMPLATE_PATH = os.path.join(BASE_DIR, DETAILS_TEMPLATE_FILE)
+TEMPLATE_PATH = os.path.join(BASE_DIR, "Core", TEMPLATE_FILE)
+DETAILS_TEMPLATE_PATH = os.path.join(BASE_DIR, "Core", DETAILS_TEMPLATE_FILE)
 
 
 # ==============================================================================

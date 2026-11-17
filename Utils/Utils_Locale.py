@@ -85,8 +85,17 @@ STRINGS = {
         "label_log_folder":     "Log Folder:",
         "placeholder_file":     "Select log file (.txt)...",
         "placeholder_folder":   "Select folder with .txt logs...",
-        "mode_single":          "Single file mode",
-        "mode_batch":           "Batch mode: Processing entire folder sequentially",
+        
+        # --- Выпадающий список режимов ---
+        "combo_mode_single": "One file (Storage config file)",
+        "combo_mode_batch": "Folder with files (Storage config file)",
+        "combo_mode_archive": "(WIP) Archive (Storage logs)",
+        "combo_mode_archive_folder": "(WIP) Folder with archives (Storage logs)",
+        "combo_mode_auto": "(WIP) Automatic",
+        "mode_current": "Current mode: {mode}",
+        "mode_wip": "WIP",
+        "msg_wip_title": "Work in Progress",
+        "msg_wip_text": "This mode is not implemented yet.\nPlease select 'One file' or 'Folder with files'.",
 
         # --- Вкладки ---
         "tab_console":          "📋 Console",
@@ -332,8 +341,17 @@ STRINGS = {
         "label_log_folder":     "Папка с логами:",
         "placeholder_file":     "Выберите лог-файл (.txt)...",
         "placeholder_folder":   "Выберите папку с .txt логами...",
-        "mode_single":          "Режим одного файла",
-        "mode_batch":           "Пакетный режим: последовательная обработка всей папки",
+        
+        # --- Выпадающий список режимов ---
+        "combo_mode_single": "Один файл (конфиг-файл СХД)",
+        "combo_mode_batch": "Папка с файлами (конфиг-файл СХД)",
+        "combo_mode_archive": "(WIP) Архив (пакет логов СХД)",
+        "combo_mode_archive_folder": "(WIP) Папка с архивами (пакет логов СХД)",
+        "combo_mode_auto": "(WIP) Автоматический выбор",
+        "mode_current": "Текущий режим: {mode}",
+        "mode_wip": "В разработке",
+        "msg_wip_title": "В разработке",
+        "msg_wip_text": "Данный режим еще не реализован.\nПожалуйста, выберите 'Один файл' или 'Папка с файлами'.",
 
         # --- Вкладки ---
         "tab_console":          "📋 Консоль",

@@ -14,8 +14,18 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 from Utils.Utils_Locale import tr
-from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_BBU_Tab import BBUDetailsTab
+
+# Импортируем все вкладки
 from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_Controller_Tab import ControllerDetailsTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_Exp_Module_Tab import ExpModuleTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_Disk_Drive_Tab import DiskDriveTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_BBU_Tab import BBUDetailsTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_IO_Tab import IOTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_PSU_Tab import PSUTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_DAE_Tab import DAETab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_DSW_Tab import DSWTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_Fan_Tab import FanTab
+from GUI.Gui_Dialogs.Gui_Details_Tabs.Gui_Details_SFP_Tab import SFPTab
 
 
 class ComponentSelectionDialog(QDialog):
@@ -279,43 +289,42 @@ class DetailedAnalysisDialog(QDialog):
         self.tabs.clear()
         self._tabs_instances.clear()
         analyzed_anything = False
-        unsupported_components = []
+        
+        # Здесь жесткий порядок и проверка на поддерживаемые компоненты
+        tabs_map = [
+            ("Controller", ControllerDetailsTab, "🧠 Controller"),
+            ("Expansion Board", ExpModuleTab, "🔌 Exp_Module"),
+            ("Disk", DiskDriveTab, "💽 Disk Drive"),
+            ("BBU", BBUDetailsTab, "🔋 BBU"),
+            ("I/O Module", IOTab, "🔗 IO Module"),
+            ("Power Supply", PSUTab, "⚡ PSU"),
+            ("Enclosure", DAETab, "📦 DAE"),
+            ("Data Switch", DSWTab, "🌐 Data Switch"),
+            ("Fan", FanTab, "🌀 Fan"),
+            ("SFP Module", SFPTab, "🔌 SFP"),
+        ]
 
-        # Диспетчер вкладок
-        if "BBU" in self.selected_components:
-            bbu_tab = BBUDetailsTab(self.file_paths, self)
-            if bbu_tab.get_export_data():
-                self.tabs.addTab(bbu_tab, "🔋 BBU")
-                self._tabs_instances["BBU"] = bbu_tab
-                analyzed_anything = True
-
-        if "Controller" in self.selected_components:
-            ctrl_tab = ControllerDetailsTab(self.file_paths, self)
-            if ctrl_tab.get_export_data():
-                self.tabs.addTab(ctrl_tab, "🧠 Controller")
-                self._tabs_instances["Controller"] = ctrl_tab
-                analyzed_anything = True
-
-        supported_now = {"BBU", "Controller"}
-        for comp in self.selected_components:
-            if comp not in supported_now:
-                unsupported_components.append(comp)
+        for comp_name, TabClass, tab_title in tabs_map:
+            if comp_name in self.selected_components:
+                try:
+                    # Создаем вкладку
+                    tab_instance = TabClass(self.file_paths, self)
+                    self.tabs.addTab(tab_instance, tab_title)
+                    self._tabs_instances[comp_name] = tab_instance
+                    analyzed_anything = True
+                except Exception as e:
+                    print(f"Ошибка при создании вкладки {comp_name}: {e}")
+                    QMessageBox.warning(self, "Ошибка", f"Не удалось создать вкладку {comp_name}: {e}")
 
         if not analyzed_anything:
             QMessageBox.information(
                 self, "Анализ", 
-                f"Логика анализа для выбранных компонентов пока не написана:\n{', '.join(unsupported_components)}"
+                "Логика анализа для выбранных компонентов пока не написана."
             )
             self.btn_export_excel.setEnabled(False)
         else:
             self.btn_export_excel.setEnabled(True)
             self.tabs.setCurrentIndex(0)
-            if unsupported_components:
-                QMessageBox.information(
-                    self, "Внимание", 
-                    f"Анализ выполнен только для поддерживаемых компонентов.\n"
-                    f"Следующие компоненты проигнорированы: {', '.join(unsupported_components)}"
-                )
 
     def _export_to_excel(self):
         if not self._tabs_instances:
